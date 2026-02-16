@@ -80,11 +80,8 @@ async def post_record(id: str, request: Request):
         return error_response("invalid input; could not parse json", 400)
 
     try:
-        record = service.create_record(record_id, updates)
+        record = service.upsert_record(record_id, updates)
     except Exception:
-        return error_response("internal error", 500)
-
-    if record is None:
         return error_response("internal error", 500)
 
     return {"id": record_id, "data": record}

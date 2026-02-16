@@ -22,3 +22,11 @@ class RecordRepository:
                 (record_id, json.dumps(data)),
             )
             conn.commit()
+
+    def update(self, record_id: int, data: dict[str, str]) -> None:
+        with get_connection() as conn:
+            conn.execute(
+                "UPDATE records SET current_data = ? WHERE id = ?",
+                (json.dumps(data), record_id),
+            )
+            conn.commit()
