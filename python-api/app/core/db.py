@@ -32,4 +32,37 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS record_versions (
+                record_id INTEGER NOT NULL,
+                version INTEGER NOT NULL,
+                data_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY (record_id, version)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_record_versions_record_id
+            ON record_versions (record_id)
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO record_versions (record_id, version, data_json, created_at)
+            SELECT
+                records.id,
+                1,
+                records.current_data,
+                strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+            FROM records
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM record_versions
+                WHERE record_versions.record_id = records.id
+            )
+            """
+        )
         conn.commit()
