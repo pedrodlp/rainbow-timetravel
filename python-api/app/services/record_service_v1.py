@@ -13,3 +13,6 @@ class RecordServiceV1:
         created = {key: value for key, value in updates.items() if value is not None}
         self.repo.create(record_id, created)
         return created
+
+    def get_record(self, record_id: int) -> dict[str, str] | None:
+        return self.repo.get_by_id(record_id)
