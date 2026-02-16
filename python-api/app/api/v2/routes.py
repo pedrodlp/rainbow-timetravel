@@ -112,3 +112,20 @@ async def post_record(id: str, request: Request):
         return error_response("internal error", 500)
 
     return {"id": record_id, "version": version, "data": record}
+
+
+@router.get("/records/{id}/versions")
+def list_record_versions(id: str):
+    record_id = parse_positive_int(id)
+    if record_id is None:
+        return error_response("invalid id; id must be a positive number", 400)
+
+    try:
+        latest = service.get_record(record_id)
+        if latest is None:
+            return error_response(f"record of id {record_id} does not exist", 400)
+        versions = service.list_versions(record_id)
+    except Exception:
+        return error_response("internal error", 500)
+
+    return {"id": record_id, "versions": versions}
