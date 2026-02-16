@@ -74,4 +74,4 @@ def test_v2_get_missing_version_returns_400() -> None:
     response = client.get("/api/v2/records/1?version=99")
 
     assert response.status_code == 400
-    assert response.json() == {"error": "record of id 1 does not exist at version 99"}
+    assert response.json() == {"error": "record of id 1 does not have version 99"}
