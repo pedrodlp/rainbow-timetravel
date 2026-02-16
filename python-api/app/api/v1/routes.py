@@ -8,6 +8,24 @@ from app.services.record_service_v1 import RecordServiceV1
 
 router = APIRouter()
 service = RecordServiceV1()
+POST_RECORD_FASTAPI_EXTRA = {
+    "requestBody": {
+        "required": True,
+        "content": {
+            "application/json": {
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {"type": "string", "nullable": True},
+                },
+                "examples": {
+                    "create": {"value": {"hello": "world"}},
+                    "update": {"value": {"hello": "world 2", "status": "ok"}},
+                    "deleteField": {"value": {"hello": None}},
+                },
+            }
+        },
+    }
+}
 
 
 def error_response(message: str, status_code: int) -> JSONResponse:
@@ -71,24 +89,7 @@ def get_record(id: str):
 @router.post(
     "/records/{id}",
     response_model=RecordResponse,
-    openapi_extra={
-        "requestBody": {
-            "required": True,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "object",
-                        "additionalProperties": {"type": "string", "nullable": True},
-                    },
-                    "examples": {
-                        "create": {"value": {"hello": "world"}},
-                        "update": {"value": {"hello": "world 2", "status": "ok"}},
-                        "deleteField": {"value": {"hello": None}},
-                    },
-                }
-            },
-        }
-    },
+    openapi_extra=POST_RECORD_FASTAPI_EXTRA,
 )
 async def post_record(id: str, request: Request):
     record_id = parse_positive_id(id)
