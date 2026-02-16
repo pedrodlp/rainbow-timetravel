@@ -35,28 +35,70 @@ open http://127.0.0.1:8000/docs
 curl -X POST http://localhost:8000/api/v1/health
 ```
 
-## V2 Contract (Planned)
+## API behavior
 
 ### Version semantics
 - Versioning is per record and monotonic: `1, 2, 3, ...`.
-- Every successful update creates a new immutable version.
-- History uses full JSON snapshots per version.
+- Every successful write creates a new immutable version snapshot.
+- `/api/v1` and `/api/v2` write through the same versioned upsert path.
 
-### Endpoints under `/api/v2`
+### `/api/v1` endpoints
+- `POST /api/v1/health`
+- `GET /api/v1/records/{id}`
+- `POST /api/v1/records/{id}`
+
+Backward compatibility guarantees for `/api/v1`:
+- Response shape remains `{ "id": number, "data": { ... } }`
+- Error payload remains `{ "error": "..." }`
+- Existing status code behavior is preserved
+
+### `/api/v2` endpoints
 - `GET /api/v2/records/{id}`
-Returns the latest state of the record.
+  Returns latest record state.
 - `GET /api/v2/records/{id}?version={n}`
-Returns the state at a specific version.
+  Returns state at a specific version.
 - `POST /api/v2/records/{id}`
-Applies update semantics to the latest state and creates a new version.
+  Applies updates and returns new version.
 - `GET /api/v2/records/{id}/versions`
-Lists available versions for the record.
+  Returns available version numbers and timestamps.
 
-### Update semantics
-- Request body: JSON object with `string -> string | null`.
+### Update semantics (v1 and v2 writes)
+- Request body must be a JSON object with `string -> string | null`.
 - Non-null values set/overwrite keys.
 - `null` values delete keys.
 
-### Backward compatibility
-- `/api/v1` endpoints keep current response shapes and status behavior.
-- `/api/v1` continues to work unchanged for clients.
+## v2 curl examples
+
+Create version 1:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v2/records/1 \
+  -H "Content-Type: application/json" \
+  -d '{"hello":"world"}'
+```
+
+Example response:
+```json
+{"id":1,"version":1,"data":{"hello":"world"}}
+```
+
+Create version 2:
+```bash
+curl -X POST http://127.0.0.1:8000/api/v2/records/1 \
+  -H "Content-Type: application/json" \
+  -d '{"hello":"world 2","status":"ok"}'
+```
+
+Get latest:
+```bash
+curl http://127.0.0.1:8000/api/v2/records/1
+```
+
+Get a specific version:
+```bash
+curl "http://127.0.0.1:8000/api/v2/records/1?version=1"
+```
+
+List versions:
+```bash
+curl http://127.0.0.1:8000/api/v2/records/1/versions
+```
