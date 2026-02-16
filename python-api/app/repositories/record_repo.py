@@ -78,12 +78,20 @@ class RecordRepository:
     def write_latest_and_version(
         self,
         record_id: int,
-        next_version: int,
         data: dict[str, str],
-    ) -> None:
+    ) -> int:
         payload = json.dumps(data)
         with get_connection() as conn:
-            conn.execute("BEGIN")
+            conn.execute("BEGIN IMMEDIATE")
+            next_version_row = conn.execute(
+                """
+                SELECT COALESCE(MAX(version), 0) + 1 AS next_version
+                FROM record_versions
+                WHERE record_id = ?
+                """,
+                (record_id,),
+            ).fetchone()
+            next_version = int(next_version_row["next_version"])
             conn.execute(
                 """
                 INSERT INTO records (id, current_data)
@@ -100,3 +108,4 @@ class RecordRepository:
                 (record_id, next_version, payload),
             )
             conn.commit()
+            return next_version
