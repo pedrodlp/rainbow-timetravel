@@ -68,7 +68,28 @@ def get_record(id: str):
     return {"id": record_id, "data": record}
 
 
-@router.post("/records/{id}")
+@router.post(
+    "/records/{id}",
+    response_model=RecordResponse,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "additionalProperties": {"type": "string", "nullable": True},
+                    },
+                    "examples": {
+                        "create": {"value": {"hello": "world"}},
+                        "update": {"value": {"hello": "world 2", "status": "ok"}},
+                        "deleteField": {"value": {"hello": None}},
+                    },
+                }
+            },
+        }
+    },
+)
 async def post_record(id: str, request: Request):
     record_id = parse_positive_id(id)
     if record_id is None:
