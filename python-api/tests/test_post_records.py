@@ -92,3 +92,14 @@ def test_post_null_value_deletes_key() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"id": 1, "data": {"status": "ok"}}
+
+
+def test_v1_post_writes_are_versioned_for_v2_history() -> None:
+    client = TestClient(app)
+    client.post("/api/v1/records/5", json={"hello": "v1"})
+    client.post("/api/v1/records/5", json={"hello": "v2"})
+
+    response = client.get("/api/v2/records/5/versions")
+
+    assert response.status_code == 200
+    assert [item["version"] for item in response.json()["versions"]] == [1, 2]
