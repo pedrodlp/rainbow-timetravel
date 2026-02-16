@@ -69,3 +69,26 @@ def test_post_non_object_payload_returns_400() -> None:
 
     assert response.status_code == 400
     assert response.json() == {"error": "invalid input; could not parse json"}
+
+
+def test_post_updates_existing_record() -> None:
+    client = TestClient(app)
+    client.post("/api/v1/records/1", json={"hello": "world"})
+
+    response = client.post("/api/v1/records/1", json={"hello": "world 2", "status": "ok"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": 1,
+        "data": {"hello": "world 2", "status": "ok"},
+    }
+
+
+def test_post_null_value_deletes_key() -> None:
+    client = TestClient(app)
+    client.post("/api/v1/records/1", json={"hello": "world", "status": "ok"})
+
+    response = client.post("/api/v1/records/1", json={"hello": None})
+
+    assert response.status_code == 200
+    assert response.json() == {"id": 1, "data": {"status": "ok"}}
