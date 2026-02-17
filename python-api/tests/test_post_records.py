@@ -92,3 +92,17 @@ def test_post_null_value_deletes_key() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"id": 1, "data": {"status": "ok"}}
+
+
+def test_v1_post_writes_are_versioned_for_v2_history() -> None:
+    # This test verifies that when we create or update records using the v1 API,
+    # these changes are properly recorded in the version history that can be accessed through the v2 API.
+    # We create two versions of a record and then check that both versions are listed in the version history endpoint.
+    client = TestClient(app)
+    client.post("/api/v1/records/5", json={"hello": "v1"})
+    client.post("/api/v1/records/5", json={"hello": "v2"})
+
+    response = client.get("/api/v2/records/5/versions")
+
+    assert response.status_code == 200
+    assert [item["version"] for item in response.json()["versions"]] == [1, 2]

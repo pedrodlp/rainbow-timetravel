@@ -8,6 +8,8 @@ from app.services.record_service_v1 import RecordServiceV1
 
 router = APIRouter()
 service = RecordServiceV1()
+# This extra metadata is used to enhance the OpenAPI documentation for the POST /records/{id} endpoint,
+# providing clear examples of the expected request body format for creating, updating, and deleting fields in a record.
 POST_RECORD_FASTAPI_EXTRA = {
     "requestBody": {
         "required": True,
@@ -33,6 +35,7 @@ def error_response(message: str, status_code: int) -> JSONResponse:
 
 
 def parse_positive_id(raw_id: str) -> int | None:
+    # Parse a string ID and ensure it is a positive integer. If the ID is invalid (not an integer or not positive), return None.
     try:
         value = int(raw_id)
     except ValueError:
@@ -45,6 +48,8 @@ def parse_positive_id(raw_id: str) -> int | None:
 
 
 def parse_updates(raw_body: bytes) -> dict[str, str | None] | None:
+    # Parse the raw request body as JSON and validate that it is a dictionary with string keys and string or null values.
+    # If the input is invalid, return None.
     try:
         payload = json.loads(raw_body)
     except json.JSONDecodeError:
@@ -66,11 +71,13 @@ def parse_updates(raw_body: bytes) -> dict[str, str | None] | None:
 
 @router.post("/health")
 def healthcheck() -> dict[str, bool]:
+    # Healthcheck endpoint to verify that the API is running.
     return {"ok": True}
 
 
 @router.get("/records/{id}", response_model=RecordResponse)
 def get_record(id: str):
+    # Retrieve the current state of a record by its ID. If the record does not exist or the ID is invalid, return an appropriate error response.
     record_id = parse_positive_id(id)
     if record_id is None:
         return error_response("invalid id; id must be a positive number", 400)
@@ -92,6 +99,7 @@ def get_record(id: str):
     openapi_extra=POST_RECORD_FASTAPI_EXTRA,
 )
 async def post_record(id: str, request: Request):
+    # Create or update a record with the given ID based on the provided JSON body.
     record_id = parse_positive_id(id)
     if record_id is None:
         return error_response("invalid id; id must be a positive number", 400)
